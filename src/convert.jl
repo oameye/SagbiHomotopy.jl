@@ -9,10 +9,10 @@ function _coeffs_exponents(poly::QQMPolyRingElem)
 end
 
 function _hc_to_oscar(
-    poly::Expression,
-    oscar_vars::AbstractVector{<:QQMPolyRingElem},
-    hc_vars::AbstractVector{<:Variable},
-)
+        poly::Expression,
+        oscar_vars::AbstractVector{<:QQMPolyRingElem},
+        hc_vars::AbstractVector{<:Variable},
+    )
     exps, coeffs = exponents_coefficients(poly, hc_vars)
 
     zero_poly = oscar_vars[1] - oscar_vars[1]

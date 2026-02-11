@@ -25,22 +25,22 @@ function _build_deformed_groups(parametrization::Parametrization, weight::Vector
 end
 
 function _append_substituted_equations!(
-    equations::Vector{Expression},
-    linear_group::Vector{Expression},
-    linear_vars::Vector{Variable},
-    deformed_group::Vector{Expression},
-)
+        equations::Vector{Expression},
+        linear_group::Vector{Expression},
+        linear_vars::Vector{Variable},
+        deformed_group::Vector{Expression},
+    )
     substituted = subs(linear_group, linear_vars => deformed_group)
     append!(equations, substituted)
     return nothing
 end
 
 function _augment_base_locus!(
-    solutions_vec::Vector,
-    problem::SagbiProblem,
-    system::System,
-    opts::SolveOptions,
-)
+        solutions_vec::Vector,
+        problem::SagbiProblem,
+        system::System,
+        opts::SolveOptions,
+    )
     signatures = Set{String}()
     for sol in solutions_vec
         push!(signatures, _solution_signature(sol, opts.signature_digits))

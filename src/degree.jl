@@ -26,11 +26,11 @@ function leading_monomial(poly::Expression, parametrization::Parametrization, we
 end
 
 function _weight_deformation_with_t(
-    poly::Expression,
-    vars::Vector{Variable},
-    weight::AbstractVector{<:Integer},
-    t::Variable,
-)
+        poly::Expression,
+        vars::Vector{Variable},
+        weight::AbstractVector{<:Integer},
+        t::Variable,
+    )
     checked_weight = _validate_weight(weight, length(vars))
 
     exps, coeffs = exponents_coefficients(poly, vars)
@@ -70,11 +70,11 @@ function _weight_deformation_with_t(
 end
 
 function weight_deformation(
-    poly::Expression,
-    vars::Vector{Variable},
-    weight::AbstractVector{<:Integer};
-    t::Union{Nothing,Variable} = nothing,
-)
+        poly::Expression,
+        vars::Vector{Variable},
+        weight::AbstractVector{<:Integer};
+        t::Union{Nothing, Variable} = nothing,
+    )
     if isnothing(t)
         @unique_var generated_t
         return _weight_deformation_with_t(poly, vars, weight, generated_t)
@@ -83,11 +83,11 @@ function weight_deformation(
 end
 
 function weight_deformation(
-    poly::Expression,
-    parametrization::Parametrization,
-    weight::AbstractVector{<:Integer};
-    t::Union{Nothing,Variable} = nothing,
-)
+        poly::Expression,
+        parametrization::Parametrization,
+        weight::AbstractVector{<:Integer};
+        t::Union{Nothing, Variable} = nothing,
+    )
     return weight_deformation(poly, parametrization.vars, weight; t = t)
 end
 
@@ -149,11 +149,11 @@ function degree_map(parametrization::AbstractVector; kwargs...)
 end
 
 function degree_monomial_map(
-    parametrization::Parametrization,
-    weight::AbstractVector{<:Integer};
-    rng::AbstractRNG = default_rng(),
-    random_range::Int = 100,
-)
+        parametrization::Parametrization,
+        weight::AbstractVector{<:Integer};
+        rng::AbstractRNG = default_rng(),
+        random_range::Int = 100,
+    )
     checked_weight = _validate_weight(weight, length(parametrization.vars))
 
     monomial_groups = Vector{Vector{Expression}}(undef, length(parametrization.groups))

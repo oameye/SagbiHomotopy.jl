@@ -16,7 +16,7 @@ function possible_sagbi(sys::System)
 
     linear_equations = Vector{Expression}(undef, length(supports))
     all_sagbi_terms = Vector{Expression}()
-    seen_terms = Dict{Expression,Int}()
+    seen_terms = Dict{Expression, Int}()
 
     for i in eachindex(supports)
         support_matrix = supports[i]

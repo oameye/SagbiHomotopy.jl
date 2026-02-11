@@ -1,18 +1,18 @@
-struct Parametrization{E<:Expression}
+struct Parametrization{E <: Expression}
     groups::Vector{Vector{E}}
     vars::Vector{Variable}
 end
 
-struct LinearSection{E<:Expression}
+struct LinearSection{E <: Expression}
     groups::Vector{Vector{E}}
     vars_per_group::Vector{Vector{Variable}}
 end
 
-struct SagbiProblem{E<:Expression}
+struct SagbiProblem{E <: Expression}
     linear::LinearSection{E}
     parametrization::Parametrization{E}
 
-    function SagbiProblem{E}(linear::LinearSection{E}, parametrization::Parametrization{E}) where {E<:Expression}
+    function SagbiProblem{E}(linear::LinearSection{E}, parametrization::Parametrization{E}) where {E <: Expression}
         if length(linear.groups) != length(parametrization.groups)
             throw(IncompatibleProblemError("LinearSection and Parametrization must have the same number of groups."))
         end
@@ -33,8 +33,8 @@ struct SagbiProblem{E<:Expression}
     end
 end
 
-Base.@kwdef struct SolveOptions{R<:AbstractRNG}
-    weight::Union{Nothing,Vector{Int}} = nothing
+Base.@kwdef struct SolveOptions{R <: AbstractRNG}
+    weight::Union{Nothing, Vector{Int}} = nothing
     check_degree::Bool = false
     allow_degree_drop::Bool = false
     include_base_locus::Bool = false
@@ -47,14 +47,14 @@ end
 
 struct SolveMetadata
     weight::Vector{Int}
-    degree_map::Union{Nothing,Int}
-    degree_monomial_map::Union{Nothing,Int}
+    degree_map::Union{Nothing, Int}
+    degree_monomial_map::Union{Nothing, Int}
     degree_drop_detected::Bool
     base_locus_candidates::Int
     base_locus_kept::Int
 end
 
-struct SolveResult{R,S}
+struct SolveResult{R, S}
     tracker_result::R
     solutions::Vector{S}
     metadata::SolveMetadata
@@ -75,7 +75,7 @@ function LinearSection(groups::AbstractVector)
     return LinearSection{Expression}(normalized, vars_per_group)
 end
 
-function SagbiProblem(linear::LinearSection{E}, parametrization::Parametrization{E}) where {E<:Expression}
+function SagbiProblem(linear::LinearSection{E}, parametrization::Parametrization{E}) where {E <: Expression}
     return SagbiProblem{E}(linear, parametrization)
 end
 

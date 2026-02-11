@@ -13,8 +13,10 @@ function benchmark_paper_examples!(suite::BenchmarkTools.BenchmarkGroup)
     rng = MersenneTwister(20260210)
     @var p[1:4]
     @var q[1:4]
-    lin_sys = [rand(rng, -100:-1, 2, 4) * p,
-        rand(rng, -100:-1, 1, 4) * q]
+    lin_sys = [
+        rand(rng, -100:-1, 2, 4) * p,
+        rand(rng, -100:-1, 1, 4) * q,
+    ]
     linear = LinearSection(lin_sys)
 
     suite["semimixed"]["detect_weight"] = @benchmarkable detect_weight($param) seconds = 10

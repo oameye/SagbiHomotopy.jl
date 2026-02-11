@@ -23,5 +23,5 @@ end
 
 @testset "Code linting" begin
     using JET
-    JET.test_package(SagbiHomotopy; target_modules = (SagbiHomotopy, ) )
+    JET.test_package(SagbiHomotopy; target_modules = (SagbiHomotopy,))
 end

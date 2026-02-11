@@ -16,19 +16,19 @@ struct DegreeDropError <: Exception
 end
 
 function Base.showerror(io::IO, err::InputShapeError)
-    print(io, err.message)
+    return print(io, err.message)
 end
 
 function Base.showerror(io::IO, err::IncompatibleProblemError)
-    print(io, err.message)
+    return print(io, err.message)
 end
 
 function Base.showerror(io::IO, err::NoSagbiWeightError)
-    print(io, err.message)
+    return print(io, err.message)
 end
 
 function Base.showerror(io::IO, err::DegreeDropError)
-    print(
+    return print(
         io,
         "degree of monomial parametrization drops from ",
         err.degree_map,
