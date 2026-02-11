@@ -1,45 +1,47 @@
 using SagbiHomotopy
 using HomotopyContinuation
-using LinearAlgebra
-using Combinatorics
+using MultivariatePolynomials: subs
 
-function get_sagbi_grassmannian(k::Int64, m::Int64)
-    @var x[1:(k * (m - k))]
+# Warm-up
+let
+    gr = grassmannian_parametrization(2, 4)
+    @var l
+    basis = vcat(l .* vcat(1, gr.vars), gr.parametrization.groups[1])
+    @var z[1:length(basis)]
 
-    M = hcat(I, transpose(reshape(x, m - k, k)))
+    A = randn(ComplexF64, 5, length(gr.parametrization.groups[1]))
+    equations = A * gr.parametrization.groups[1] - l .* vcat(1, gr.vars)
+    linear = LinearSection(subs(equations, basis => z))
 
-    indx = collect(powerset([i for i in 1:m], k, k))
-    sagbi = [det(M[:, ind]) for ind in indx]
-    w = [i * (m - j + 1) for i in 0:(k - 1) for j in 1:(m - k) ]
-    return x, sagbi, w
+    param = Parametrization(basis)
+    w = vcat(1, gr.weight)
+    SagbiHomotopy.solve(linear, param; weight = w, check_degree = false)
 end
-
-#run the function for the first time without storing the time
-(x1, sagbi1, w1) = get_sagbi_grassmannian(2, 4);
-A1 = randn(ComplexF64, 5, 6);
-@unique_var q[1:5], z[1:binomial(4, 2)], l;
-F1 = A1 * z - q;
-sagbi_homotopy(F1, vcat(l .* vcat(1, x1), sagbi1), weight = vcat(1, w1));
-
 
 j = 8
 
 for m in 4:j
-    for i in 2:floor(Int, m / 2)
-        k = i
-        (x, sagbi, w) = get_sagbi_grassmannian(k, m)
-
-        A = randn(ComplexF64, k * (m - k) + 1, binomial(m, k))
-        @var q[1:(k * (m - k) + 1)], z[1:binomial(m, k)]
-        F = A * z - q
-
+    for k in 2:floor(Int, m / 2)
+        gr = grassmannian_parametrization(k, m)
         @var l
-        result, elapsed_time, allocations, _, _ = @timed sagbi_homotopy(F, vcat(l .* vcat(1, x), sagbi), weight = vcat(1, w))
-        open("CCEquations/CC_timing_log_sagbi.txt", "a") do io
-            println(io, "k = ", k, ", ", "m = ", m)
-            println(io, "degree: ", length(result[2]))
-            println(io, "Execution time: ", elapsed_time, " seconds")
-            println(io, "Memory allocated: ", allocations, " bytes")
-        end
+
+        basis = vcat(l .* vcat(1, gr.vars), gr.parametrization.groups[1])
+        @var z[1:length(basis)]
+
+        A = randn(ComplexF64, k * (m - k) + 1, length(gr.parametrization.groups[1]))
+        equations = A * gr.parametrization.groups[1] - l .* vcat(1, gr.vars)
+
+        linear = LinearSection(subs(equations, basis => z))
+        param = Parametrization(basis)
+        w = vcat(1, gr.weight)
+
+        result, elapsed_time, allocations, _, _ = @timed SagbiHomotopy.solve(
+            linear,
+            param;
+            weight = w,
+            check_degree = false,
+        )
+
+        println("k=$k m=$m solutions=$(length(result.solutions)) time=$(elapsed_time)s alloc=$(allocations)")
     end
 end

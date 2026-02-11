@@ -1,40 +1,46 @@
 module SagbiHomotopy
 
-import Oscar
 import HomotopyContinuation
-using HomotopyContinuation: solutions
-using HomotopyContinuation.ModelKit: @unique_var, @var, Expression, System, Variable, exponents_coefficients, support_coefficients
-using LinearAlgebra: det, dot, norm, I
+import Oscar
+import Random
+using AbstractAlgebra: hom, ideal, kernel, matrix, polynomial_ring, quo
+using AbstractAlgebra.Generic: MPolyBuildCtx, finish, push_term!
 using Combinatorics: combinations
+using HomotopyContinuation: evaluate, solutions
+using HomotopyContinuation.ModelKit: @unique_var, @var, Expression, System, Variable, exponents_coefficients, support_coefficients
+using LinearAlgebra: I, det, dot, norm
 using MultivariatePolynomials: subs, variables
-using Oscar.Orderings: wdeglex
-using AbstractAlgebra: gens, hom, ideal, kernel, matrix, polynomial_ring, quo, vars
-using AbstractAlgebra.Generic: MPolyBuildCtx, finish, poly, push_term!
 using Nemo: QQ, QQMPolyRing, QQMPolyRingElem
-using Oscar: absolute_primary_decomposition, exponents, maximal_cones, normal_fan
-using Hecke: support
+using Oscar: absolute_primary_decomposition, maximal_cones, normal_fan
+using Oscar.Orderings: wdeglex
+using Random: AbstractRNG, default_rng
 
-export wDeg,
-    get_coeffs_exponents,
-    initial_form,
-    SagbiCriterion,
-    #extractWeightVectors,
-    weightVectorsRealizingSAGBI,
-    HC_to_oscar,
-    get_weight,
-    get_sagbi_grassmannian,
-    sagbi_homotopy,
+export Parametrization,
+    LinearSection,
+    SagbiProblem,
+    SolveOptions,
+    SolveResult,
+    SolveMetadata,
+    InputShapeError,
+    IncompatibleProblemError,
+    NoSagbiWeightError,
+    DegreeDropError,
+    solve,
+    detect_weight,
     possible_sagbi,
-    get_leading_monomial,
-    weight_deformation_for_poly,
     degree_map,
     degree_monomial_map,
-    isolated_nsols_baselocus,
-    get_base_locus
+    leading_monomial,
+    weight_deformation,
+    grassmannian_parametrization
 
-
-include("Utils.jl")
-include("SagbiDetection.jl")
-include("Homotopy.jl")
+include("errors.jl")
+include("normalize.jl")
+include("types.jl")
+include("convert.jl")
+include("detection.jl")
+include("degree.jl")
+include("solve.jl")
+include("convenience.jl")
 
 end # module SagbiHomotopy
