@@ -84,6 +84,7 @@ Configuration for [`solve`](@ref).
 - `random_range::Int=100`: sampling range used by degree estimation.
 - `atol::Float64=1e-10`: tolerance for base-locus filtering and residual checks.
 - `signature_digits::Int=8`: rounding precision used for numerical solution deduplication.
+- `show_progress::Bool=false`: whether to show HomotopyContinuation progress output.
 """
 Base.@kwdef struct SolveOptions{R <: AbstractRNG}
     weight::Union{Nothing, Vector{Int}} = nothing
@@ -95,6 +96,7 @@ Base.@kwdef struct SolveOptions{R <: AbstractRNG}
     random_range::Int = 100
     atol::Float64 = 1.0e-10
     signature_digits::Int = 8
+    show_progress::Bool = false
 end
 
 """

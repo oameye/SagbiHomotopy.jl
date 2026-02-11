@@ -84,7 +84,7 @@ function _augment_base_locus!(
             continue
         end
 
-        missing_solutions = _base_locus_solutions(group)
+        missing_solutions = _base_locus_solutions(group; show_progress = opts.show_progress)
         for missing_sol in missing_solutions
             candidates += 1
             coords = collect(missing_sol)
@@ -149,6 +149,7 @@ If no weight is provided, [`detect_weight`](@ref) is called.
 - `random_range`: integer sampling range for degree estimation.
 - `atol`: numerical tolerance used in base-locus acceptance checks.
 - `signature_digits`: dedup precision for numerical solution signatures.
+- `show_progress`: controls progress output in HomotopyContinuation solves.
 
 # Returns
 - [`SolveResult`](@ref): contains raw tracker result, final solution vector, and metadata.
@@ -219,7 +220,7 @@ function solve(problem::SagbiProblem, opts::SolveOptions = SolveOptions())
 
     system = System(equations, variables = problem.parametrization.vars, parameters = [t])
 
-    start_result = HomotopyContinuation.solve(system; target_parameters = [0], show_progress = false)
+    start_result = HomotopyContinuation.solve(system; target_parameters = [0], show_progress = opts.show_progress)
     start_solutions = solutions(start_result)
 
     tracker_result = HomotopyContinuation.solve(
@@ -227,7 +228,7 @@ function solve(problem::SagbiProblem, opts::SolveOptions = SolveOptions())
         start_solutions;
         start_parameters = [0],
         target_parameters = [1],
-        show_progress = false,
+        show_progress = opts.show_progress,
     )
 
     solutions_vec = collect(solutions(tracker_result))

@@ -314,10 +314,10 @@ function _isolated_nsols_baselocus(sagbi_group::Vector{Expression})
 end
 
 """
-    _base_locus_solutions(sagbi_group)
+    _base_locus_solutions(sagbi_group; show_progress=false)
 
 Internal helper that solves one group directly to generate base-locus candidate solutions.
 """
-function _base_locus_solutions(sagbi_group::Vector{Expression})
-    return solutions(HomotopyContinuation.solve(sagbi_group; show_progress = false))
+function _base_locus_solutions(sagbi_group::Vector{Expression}; show_progress::Bool = false)
+    return solutions(HomotopyContinuation.solve(sagbi_group; show_progress))
 end
