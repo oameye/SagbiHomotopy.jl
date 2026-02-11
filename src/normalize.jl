@@ -1,3 +1,9 @@
+"""
+    _materialize_expression_vector(values, context)
+
+Internal helper that validates `values` entries are symbolic (`Expression`/`Variable`) and
+returns a concretely typed `Vector{Expression}`.
+"""
 function _materialize_expression_vector(values::AbstractVector, context::AbstractString)
     out = Vector{Expression}(undef, length(values))
     for i in eachindex(values)
@@ -10,6 +16,17 @@ function _materialize_expression_vector(values::AbstractVector, context::Abstrac
     return out
 end
 
+"""
+    _normalize_groups(values, context)
+
+Internal helper that enforces the strict one-level grouping contract used by public constructors.
+
+Accepted shapes:
+- `Vector{Expression}` (single group)
+- `Vector{Vector{Expression}}` (multiple groups)
+
+Anything deeper is rejected.
+"""
 function _normalize_groups(values::AbstractVector, context::AbstractString)
     isempty(values) && throw(InputShapeError("$context cannot be empty."))
 
@@ -36,6 +53,11 @@ function _normalize_groups(values::AbstractVector, context::AbstractString)
     return groups
 end
 
+"""
+    _flatten_groups(groups)
+
+Internal helper that concatenates grouped expressions into one flat vector.
+"""
 function _flatten_groups(groups::Vector{Vector{Expression}})
     total = sum(length, groups)
     out = Vector{Expression}(undef, total)
@@ -49,6 +71,11 @@ function _flatten_groups(groups::Vector{Vector{Expression}})
     return out
 end
 
+"""
+    _validate_weight(weight, nvars)
+
+Internal helper that checks weight length and returns a concrete `Vector{Int}`.
+"""
 function _validate_weight(weight::AbstractVector{<:Integer}, nvars::Int)
     if length(weight) != nvars
         throw(InputShapeError("weight length $(length(weight)) does not match number of variables $nvars."))

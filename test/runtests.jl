@@ -9,8 +9,8 @@ using Random
     include("code_quality.jl")
 end
 
-@testset "v2 api" begin
-    include("api_v2.jl")
+@testset "api" begin
+    include("api.jl")
 end
 
 @testset "paper examples" begin

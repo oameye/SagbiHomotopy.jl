@@ -1,3 +1,8 @@
+"""
+    _initial_form(poly, ring, weight)
+
+Internal helper computing the initial form of an Oscar polynomial with respect to `weight`.
+"""
 function _initial_form(poly::QQMPolyRingElem, ring::QQMPolyRing, weight::AbstractVector{<:Integer})
     coeffs, exps = _coeffs_exponents(poly)
     isempty(coeffs) && return poly - poly
@@ -21,6 +26,12 @@ function _initial_form(poly::QQMPolyRingElem, ring::QQMPolyRing, weight::Abstrac
     return finish(ctx)
 end
 
+"""
+    _sagbi_criterion(G, ring, weight)
+
+Internal helper implementing the SAGBI criterion by comparing Hilbert series of quotient rings.
+Returns `true` when `G` behaves as a SAGBI basis under `weight`.
+"""
 function _sagbi_criterion(G::Vector{QQMPolyRingElem}, ring::QQMPolyRing, weight::Vector{Int})
     n = length(G)
     n == 0 && return false
@@ -44,6 +55,12 @@ function _sagbi_criterion(G::Vector{QQMPolyRingElem}, ring::QQMPolyRing, weight:
     return string(Oscar.hilbert_series(quotient_leading)) == string(Oscar.hilbert_series(quotient_full))
 end
 
+"""
+    _weight_vector_realizing_sagbi(G, ring)
+
+Internal helper that searches normal-fan cones of the Newton polytope for a weight vector
+realizing SAGBI structure. Returns `Vector{Int}` or `nothing`.
+"""
 function _weight_vector_realizing_sagbi(G::Vector{QQMPolyRingElem}, ring::QQMPolyRing)
     isempty(G) && return nothing
 
@@ -75,6 +92,24 @@ function _weight_vector_realizing_sagbi(G::Vector{QQMPolyRingElem}, ring::QQMPol
     return nothing
 end
 
+"""
+    detect_weight(parametrization::Parametrization)
+
+Detect a weight vector that realizes the given parametrization as a SAGBI basis candidate.
+
+The algorithm introduces one homogenizing variable per parametrization group, converts the
+symbolic expressions to Oscar polynomials, and searches the Newton polytope normal fan for a
+cone weight satisfying the internal SAGBI criterion.
+
+# Arguments
+- `parametrization::Parametrization`: typed grouped parametrization.
+
+# Returns
+- `Vector{Int}`: detected weight restricted to original (non-homogenizing) variables.
+
+# Errors
+- Throws [`NoSagbiWeightError`](@ref) if no valid weight is found.
+"""
 function detect_weight(parametrization::Parametrization)
     ngroups = length(parametrization.groups)
     vars = parametrization.vars
@@ -101,6 +136,11 @@ function detect_weight(parametrization::Parametrization)
     return weight[(ngroups + 1):end]
 end
 
+"""
+    detect_weight(parametrization::AbstractVector)
+
+Convenience overload that first builds a [`Parametrization`](@ref).
+"""
 function detect_weight(parametrization::AbstractVector)
     return detect_weight(Parametrization(parametrization))
 end

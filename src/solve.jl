@@ -1,3 +1,11 @@
+"""
+    _solution_signature(sol, digits::Int)
+
+Internal helper for robust numerical deduplication of solutions.
+
+Builds a deterministic string signature by rounding real/imaginary parts of each coordinate
+to `digits` decimal places.
+"""
 function _solution_signature(sol, digits::Int)
     coords = collect(sol)
     io = IOBuffer()
@@ -11,6 +19,12 @@ function _solution_signature(sol, digits::Int)
     return String(take!(io))
 end
 
+"""
+    _build_deformed_groups(parametrization::Parametrization, weight::Vector{Int}, t::Variable)
+
+Internal helper that applies [`weight_deformation`](@ref) to every polynomial in every
+parametrization group, using homotopy parameter `t`.
+"""
 function _build_deformed_groups(parametrization::Parametrization, weight::Vector{Int}, t::Variable)
     groups = Vector{Vector{Expression}}(undef, length(parametrization.groups))
     for i in eachindex(parametrization.groups)
@@ -24,6 +38,12 @@ function _build_deformed_groups(parametrization::Parametrization, weight::Vector
     return groups
 end
 
+"""
+    _append_substituted_equations!(equations, linear_group, linear_vars, deformed_group)
+
+Internal helper that substitutes `linear_vars => deformed_group` into `linear_group` and appends
+all resulting equations into `equations`.
+"""
 function _append_substituted_equations!(
         equations::Vector{Expression},
         linear_group::Vector{Expression},
@@ -35,6 +55,15 @@ function _append_substituted_equations!(
     return nothing
 end
 
+"""
+    _augment_base_locus!(solutions_vec, problem, system, opts)
+
+Internal helper for optional base-locus augmentation.
+
+It computes base-locus solutions per parametrization group, filters them with torus and residual
+checks, deduplicates numerically, appends accepted solutions to `solutions_vec`, and returns
+`(candidates, kept)` counters.
+"""
 function _augment_base_locus!(
         solutions_vec::Vector,
         problem::SagbiProblem,
@@ -83,6 +112,53 @@ function _augment_base_locus!(
     return candidates, kept
 end
 
+"""
+    solve(problem::SagbiProblem, opts::SolveOptions=SolveOptions())
+
+Solve a validated SAGBI homotopy problem and return a [`SolveResult`](@ref).
+
+This is the main entrypoint. It composes grouped linear equations with a grouped
+parametrization, constructs a one-parameter homotopy based on a SAGBI-induced weight
+deformation, tracks solutions from `t=0` to `t=1`, and optionally augments with base-locus
+solutions.
+
+The method enforces strict typing and deterministic control through [`SolveOptions`](@ref).
+If no weight is provided, [`detect_weight`](@ref) is called.
+
+# Workflow
+1. Validate runtime options (`random_range > 0`)
+2. Determine effective weight (`opts.weight` or `detect_weight`)
+3. Optionally run degree diagnostics (`check_degree`)
+4. Build deformed parametrization and substituted system
+5. Solve start system at `t=0`
+6. Track to `t=1`
+7. Optionally augment with base-locus points (`include_base_locus`)
+8. Return `SolveResult(tracker_result, solutions, metadata)`
+
+# Arguments
+- `problem::SagbiProblem`: validated linear-section + parametrization bundle.
+- `opts::SolveOptions`: solver and diagnostic options.
+
+# Keyword behavior (via `SolveOptions`)
+- `weight`: fixed integer weight vector; if omitted, autodetected.
+- `check_degree`: compute map degree and monomial map degree.
+- `allow_degree_drop`: permit continuation when degree drops.
+- `include_base_locus`: append validated base-locus solutions.
+- `vary_linear_part`: use randomized linear interpolation in the homotopy.
+- `rng`: random number generator for all randomized branches.
+- `random_range`: integer sampling range for degree estimation.
+- `atol`: numerical tolerance used in base-locus acceptance checks.
+- `signature_digits`: dedup precision for numerical solution signatures.
+
+# Returns
+- [`SolveResult`](@ref): contains raw tracker result, final solution vector, and metadata.
+
+# Errors
+- [`InputShapeError`](@ref): invalid runtime option values.
+- [`NoSagbiWeightError`](@ref): no SAGBI-realizing weight found (when weight autodetection fails).
+- [`DegreeDropError`](@ref): degree drop detected with `check_degree=true` and
+  `allow_degree_drop=false`.
+"""
 function solve(problem::SagbiProblem, opts::SolveOptions = SolveOptions())
     opts.random_range > 0 || throw(InputShapeError("random_range must be positive."))
 
@@ -167,14 +243,34 @@ function solve(problem::SagbiProblem, opts::SolveOptions = SolveOptions())
     return SolveResult(tracker_result, solutions_vec, metadata)
 end
 
+"""
+    solve(linear::LinearSection, parametrization::Parametrization; kwargs...)
+
+Convenience wrapper around [`solve(problem::SagbiProblem, opts::SolveOptions)`](@ref).
+
+Builds a [`SagbiProblem`](@ref) from typed inputs and a [`SolveOptions`](@ref) from `kwargs`.
+"""
 function solve(linear::LinearSection, parametrization::Parametrization; kwargs...)
     return solve(SagbiProblem(linear, parametrization), SolveOptions(; kwargs...))
 end
 
+"""
+    solve(linear::LinearSection, parametrization::Parametrization, opts::SolveOptions)
+
+Convenience wrapper that solves typed inputs with an explicit `SolveOptions` instance.
+"""
 function solve(linear::LinearSection, parametrization::Parametrization, opts::SolveOptions)
     return solve(SagbiProblem(linear, parametrization), opts)
 end
 
+"""
+    solve(linear::AbstractVector, parametrization::AbstractVector; kwargs...)
+
+High-level convenience wrapper.
+
+This method first constructs [`LinearSection`](@ref) and [`Parametrization`](@ref), validates
+compatibility via [`SagbiProblem`](@ref), then dispatches to [`solve`](@ref).
+"""
 function solve(linear::AbstractVector, parametrization::AbstractVector; kwargs...)
     return solve(SagbiProblem(linear, parametrization), SolveOptions(; kwargs...))
 end

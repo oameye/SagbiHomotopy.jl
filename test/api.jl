@@ -9,7 +9,7 @@ function _nonzero_int_matrix(rng::AbstractRNG, m::Int, n::Int)
     return rand(rng, values, m, n)
 end
 
-@testset "V2 API shape" begin
+@testset "API shape" begin
     @var x y z
 
     p1 = Parametrization([x, y, z])
@@ -35,7 +35,7 @@ end
     @test_throws IncompatibleProblemError SagbiProblem(linear, param)
 end
 
-@testset "V2 errors and determinism" begin
+@testset "Errors and determinism" begin
     @var x y
     @test_throws NoSagbiWeightError detect_weight(Parametrization([x + y, x - y]))
 
@@ -45,7 +45,7 @@ end
     linear = LinearSection([a[1] + 2a[2] + 3a[3] + 4a[4], 2a[1] + 5a[2] + 7a[3] + 11a[4]])
     param = Parametrization(sagbi)
 
-    @test_throws DegreeDropError SagbiHomotopy.solve(linear, param; weight = weight, check_degree = true)
+    @test_throws DegreeDropError SagbiHomotopy.solve(linear, param; weight, check_degree = true)
 
     @var u v w
     param_det = Parametrization([u^2 + 1, v^2 + 1, u * v + w^2, 1])
@@ -68,7 +68,7 @@ end
     @test res1.metadata.degree_monomial_map == res2.metadata.degree_monomial_map
 end
 
-@testset "V2 inferred constructors" begin
+@testset "Inferred constructors" begin
     @var x y z
     @test @inferred(Parametrization([x, y, z])) isa Parametrization
     @test @inferred(LinearSection([x + y, y + z])) isa LinearSection

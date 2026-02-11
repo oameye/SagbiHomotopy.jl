@@ -1,9 +1,34 @@
+"""
+    _leading_index(weights)
+
+Internal helper that returns `(idx, min_value)` where `idx` is the first position attaining the
+minimum in `weights`.
+"""
 function _leading_index(weights::AbstractVector{<:Integer})
     lead = minimum(weights)
     idx = findfirst(==(lead), weights)
     return idx::Int, lead
 end
 
+"""
+    leading_monomial(poly::Expression, vars::Vector{Variable}, weight::AbstractVector{<:Integer})
+
+Return the weight-leading monomial term of `poly` with respect to `weight`.
+
+The leading term is defined using minimal weighted exponent value under
+`dot(exponent, weight)`, consistent with the deformation used by [`weight_deformation`](@ref).
+
+# Arguments
+- `poly`: symbolic polynomial expression.
+- `vars`: variable ordering used to interpret exponent vectors.
+- `weight`: integer weight vector with `length(weight) == length(vars)`.
+
+# Returns
+- `Expression`: single-term symbolic expression.
+
+# Errors
+- Throws [`InputShapeError`](@ref) when `weight` length does not match `vars`.
+"""
 function leading_monomial(poly::Expression, vars::Vector{Variable}, weight::AbstractVector{<:Integer})
     checked_weight = _validate_weight(weight, length(vars))
     exps, coeffs = exponents_coefficients(poly, vars)
@@ -21,10 +46,21 @@ function leading_monomial(poly::Expression, vars::Vector{Variable}, weight::Abst
     return Expression(term)
 end
 
+"""
+    leading_monomial(poly::Expression, parametrization::Parametrization, weight)
+
+Convenience overload of [`leading_monomial`](@ref) using cached variable ordering from
+`parametrization`.
+"""
 function leading_monomial(poly::Expression, parametrization::Parametrization, weight::AbstractVector{<:Integer})
     return leading_monomial(poly, parametrization.vars, weight)
 end
 
+"""
+    _weight_deformation_with_t(poly, vars, weight, t)
+
+Internal helper implementing the weighted `t`-deformation with explicit homotopy parameter `t`.
+"""
 function _weight_deformation_with_t(
         poly::Expression,
         vars::Vector{Variable},
@@ -69,6 +105,25 @@ function _weight_deformation_with_t(
     return Expression(acc)
 end
 
+"""
+    weight_deformation(poly::Expression, vars::Vector{Variable}, weight; t=nothing)
+
+Construct the weighted homotopy deformation of `poly`.
+
+For each monomial term `c*x^α` in `poly`, this method adds a factor `t^(w·α - m)` where
+`m = min_i(w·α_i)` over all terms. Consequently:
+- substituting `t => 1` recovers `poly`
+- substituting `t => 0` yields [`leading_monomial`](@ref)
+
+# Arguments
+- `poly`: symbolic polynomial expression.
+- `vars`: variable ordering for exponent extraction.
+- `weight`: integer weight vector.
+- `t`: optional homotopy parameter variable. If omitted, a fresh variable is created.
+
+# Returns
+- `Expression`: deformed symbolic polynomial.
+"""
 function weight_deformation(
         poly::Expression,
         vars::Vector{Variable},
@@ -82,6 +137,12 @@ function weight_deformation(
     return _weight_deformation_with_t(poly, vars, weight, t)
 end
 
+"""
+    weight_deformation(poly::Expression, parametrization::Parametrization, weight; t=nothing)
+
+Convenience overload of [`weight_deformation`](@ref) that uses cached variables from
+`parametrization`.
+"""
 function weight_deformation(
         poly::Expression,
         parametrization::Parametrization,
@@ -91,6 +152,28 @@ function weight_deformation(
     return weight_deformation(poly, parametrization.vars, weight; t = t)
 end
 
+"""
+    degree_map(parametrization::Parametrization; rng=Random.default_rng(), random_range=100)
+
+Estimate the algebraic degree of a (possibly grouped) parametrization map by generic fiber count.
+
+The method homogenizes each group with an auxiliary variable, samples a likely generic image
+point, forms the corresponding fiber ideal, and computes the degree via
+`absolute_primary_decomposition`.
+
+# Arguments
+- `parametrization`: typed grouped parametrization.
+
+# Keyword arguments
+- `rng`: random number generator used for sample-point selection.
+- `random_range::Int=100`: absolute bound for numerator/denominator sampling; must be positive.
+
+# Returns
+- `Int`: estimated map degree from decomposition multiplicities.
+
+# Errors
+- Throws [`InputShapeError`](@ref) if `random_range <= 0`.
+"""
 function degree_map(parametrization::Parametrization; rng::AbstractRNG = default_rng(), random_range::Int = 100)
     random_range > 0 || throw(InputShapeError("random_range must be positive."))
 
@@ -144,10 +227,34 @@ function degree_map(parametrization::Parametrization; rng::AbstractRNG = default
     return sum(component[4] for component in decomposition)
 end
 
+"""
+    degree_map(parametrization::AbstractVector; kwargs...)
+
+Convenience overload that first builds a [`Parametrization`](@ref).
+"""
 function degree_map(parametrization::AbstractVector; kwargs...)
     return degree_map(Parametrization(parametrization); kwargs...)
 end
 
+"""
+    degree_monomial_map(parametrization::Parametrization, weight; rng=Random.default_rng(), random_range=100)
+
+Compute degree of the monomialized parametrization induced by `weight`.
+
+This replaces every polynomial by its [`leading_monomial`](@ref), then calls [`degree_map`](@ref)
+on the resulting map.
+
+# Arguments
+- `parametrization`: typed grouped parametrization.
+- `weight`: integer weight vector.
+
+# Keyword arguments
+- `rng`: RNG passed through to [`degree_map`](@ref).
+- `random_range`: sampling range passed through to [`degree_map`](@ref).
+
+# Returns
+- `Int`: degree of the monomial map.
+"""
 function degree_monomial_map(
         parametrization::Parametrization,
         weight::AbstractVector{<:Integer};
@@ -169,10 +276,21 @@ function degree_monomial_map(
     return degree_map(Parametrization(monomial_groups); rng = rng, random_range = random_range)
 end
 
+"""
+    degree_monomial_map(parametrization::AbstractVector, weight; kwargs...)
+
+Convenience overload that first builds a [`Parametrization`](@ref).
+"""
 function degree_monomial_map(parametrization::AbstractVector, weight::AbstractVector{<:Integer}; kwargs...)
     return degree_monomial_map(Parametrization(parametrization), weight; kwargs...)
 end
 
+"""
+    _isolated_nsols_baselocus(sagbi_group)
+
+Internal helper that counts isolated (dimension-zero) components in the base locus ideal of one
+parametrization group.
+"""
 function _isolated_nsols_baselocus(sagbi_group::Vector{Expression})
     hc_vars = Vector{Variable}(variables(sagbi_group))
     _, ring_vars_tuple = polynomial_ring(QQ, string.(hc_vars))
@@ -195,6 +313,11 @@ function _isolated_nsols_baselocus(sagbi_group::Vector{Expression})
     return isolated_degree
 end
 
+"""
+    _base_locus_solutions(sagbi_group)
+
+Internal helper that solves one group directly to generate base-locus candidate solutions.
+"""
 function _base_locus_solutions(sagbi_group::Vector{Expression})
     return solutions(HomotopyContinuation.solve(sagbi_group; show_progress = false))
 end

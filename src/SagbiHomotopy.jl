@@ -1,19 +1,21 @@
 module SagbiHomotopy
 
-import HomotopyContinuation
-import Oscar
-import Random
+using LinearAlgebra: I, det, dot, norm
 using AbstractAlgebra: hom, ideal, kernel, matrix, polynomial_ring, quo
 using AbstractAlgebra.Generic: MPolyBuildCtx, finish, push_term!
+
 using Combinatorics: combinations
-using HomotopyContinuation: evaluate, solutions
+
+using HomotopyContinuation: HomotopyContinuation, evaluate, solutions
 using HomotopyContinuation.ModelKit: @unique_var, @var, Expression, System, Variable, exponents_coefficients, support_coefficients
-using LinearAlgebra: I, det, dot, norm
+
 using MultivariatePolynomials: subs, variables
 using Nemo: QQ, QQMPolyRing, QQMPolyRingElem
-using Oscar: absolute_primary_decomposition, maximal_cones, normal_fan
+
+using Oscar: Oscar, absolute_primary_decomposition, maximal_cones, normal_fan
 using Oscar.Orderings: wdeglex
-using Random: AbstractRNG, default_rng
+
+using Random: Random, AbstractRNG, default_rng
 
 export Parametrization,
     LinearSection,

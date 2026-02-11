@@ -1,3 +1,8 @@
+"""
+    _monomial_from_support(vars_sys, support_matrix, col)
+
+Internal helper that reconstructs a monomial from one support-matrix column.
+"""
 function _monomial_from_support(vars_sys::Vector{Variable}, support_matrix::AbstractMatrix, col::Int)
     nvars = length(vars_sys)
     term = vars_sys[1]^0
@@ -10,6 +15,24 @@ function _monomial_from_support(vars_sys::Vector{Variable}, support_matrix::Abst
     return term
 end
 
+"""
+    possible_sagbi(sys::System)
+
+Extract a linear-system / SAGBI-candidate decomposition from a polynomial `System`.
+
+This utility groups monomials by shared coefficients in each equation of `sys`, producing:
+- a symbolic linear section in fresh variables `z`
+- a parametrization consisting of grouped coefficient-monomial sums
+
+# Arguments
+- `sys::System`: polynomial system in `HomotopyContinuation` form.
+
+# Returns
+- `(linear::LinearSection, parametrization::Parametrization)`
+
+The returned pair can be passed directly to [`solve`](@ref) (with explicit or autodetected
+weight), or analyzed with [`detect_weight`](@ref), [`degree_map`](@ref), etc.
+"""
 function possible_sagbi(sys::System)
     supports, coeff_vectors = support_coefficients(sys)
     vars_sys = Vector{Variable}(variables(sys))
@@ -62,6 +85,25 @@ function possible_sagbi(sys::System)
     return LinearSection(linear_in_new_vars), Parametrization(all_sagbi_terms)
 end
 
+"""
+    grassmannian_parametrization(k::Int, m::Int)
+
+Construct the standard Plucker-coordinate parametrization data for `Gr(k,m)`.
+
+# Arguments
+- `k::Int`: subspace dimension.
+- `m::Int`: ambient dimension.
+
+# Returns
+A named tuple:
+- `vars::Vector{Variable}`: matrix-chart variables.
+- `parametrization::Parametrization`: single-group Plucker coordinate expressions.
+- `weight::Vector{Int}`: canonical diagonal-term-order weight often used with
+  [`solve`](@ref).
+
+# Errors
+- Throws [`InputShapeError`](@ref) unless `1 <= k <= m`.
+"""
 function grassmannian_parametrization(k::Int, m::Int)
     if !(1 <= k <= m)
         throw(InputShapeError("Expected 1 <= k <= m, got k=$k and m=$m."))
